@@ -1,0 +1,11 @@
+[package]
+name = "monitor_ambient_lighting_rust_edition"
+version = "0.1.0"
+authors = ["AaronLi <dumfing@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+scrap = "0.5.0"
+systray = "0.4.0"
