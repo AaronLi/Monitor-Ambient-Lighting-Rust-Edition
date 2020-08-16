@@ -1,9 +1,11 @@
+mod test_kernel;
 mod kernel;
 
 extern crate scrap;
 
 use std::path::Path;
 use std::fs::File;
+use std::fs;
 use std::io::Write;
 use std::io::ErrorKind::WouldBlock;
 use std::thread;
@@ -81,16 +83,25 @@ fn main() {
 
 fn save_to_file(image_data: Vec<u8>, image_width: usize, image_height: usize, filename: &str){
     let path = Path::new(filename);
+    path.extension().expect("Invalid file extension!");
+
+    match fs::create_dir_all(path.parent().expect("Unable to extract parent from given path")){
+        Err(err) => {
+            panic!("{}", err);
+        },
+        Ok(_res) => {}
+    }
+
     let display_text = path.display();
 
     let mut out_file = match File::create(path){
         Err(why) => panic!("Couldn't create {}: {}", display_text, why),
         Ok(file) => file,
     };
-    out_file.write(format!("P6\n{} {} {}\n", image_width, image_height, 255).as_bytes());
+    out_file.write(format!("P6\n{} {} {}\n", image_width, image_height, 255).as_bytes()).unwrap();
     let mut out_bytes: Vec<u8> = Vec::new();
-    for y in 0..(image_height) {
-        for x in 0..(image_width){
+    for y in 0..image_height {
+        for x in 0..image_width {
             let column = y * image_width;
             let address  = (column + x) * 3;
             let rgb: [u8; 3] = [image_data[address], image_data[address+1], image_data[address+2]];
@@ -98,5 +109,5 @@ fn save_to_file(image_data: Vec<u8>, image_width: usize, image_height: usize, fi
             out_bytes.extend_from_slice(&rgb);
         }
     }
-    out_file.write(out_bytes.as_slice());
+    out_file.write(out_bytes.as_slice()).unwrap();
 }
