@@ -9,3 +9,4 @@ edition = "2018"
 [dependencies]
 scrap = "0.5.0"
 systray = "0.4.0"
+serialport = "3.3.0"
