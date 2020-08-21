@@ -1,3 +1,4 @@
+mod util;
 mod app;
 mod debugging;
 mod test_kernel;

@@ -62,7 +62,8 @@ pub fn select_serial_port(settings: Option<SerialPortSettings>) -> Box<dyn Seria
 
         let serial_port_selection = match selection.parse::<usize>(){
             Ok(selection) => {
-                if (0..portnames.len()).contains(&(selection - 1)) {
+                if (0 < selection && selection < portnames.len()) {
+                    println!("{}", selection - 1);
                     portnames.get(selection - 1).unwrap()
                 }else{
                     println!("Invalid selection");
