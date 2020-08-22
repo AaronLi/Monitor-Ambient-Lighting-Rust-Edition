@@ -1,3 +1,4 @@
+mod worker;
 mod util;
 mod app;
 mod debugging;
@@ -11,15 +12,14 @@ extern crate systray;
 use std::io::ErrorKind::WouldBlock;
 use std::thread;
 use std::time::{Duration, Instant};
-use crate::kernel::KernelApply;
 use crate::debugging::select_serial_port;
 
 fn main() {
     let mut taskbarapp = systray::Application::new().unwrap();
 
-    app::setup_application(&mut taskbarapp);
+    let taskbar_thread = app::setup_application(&mut taskbarapp);
 
-    select_serial_port(None);
+    //select_serial_port(None);
 
     let display = scrap::Display::primary().expect("Couldn't find primary display");
     let mut capturer = scrap::Capturer::new(display).expect("Couldn't begin display capture");
@@ -79,8 +79,11 @@ fn main() {
         println!("Finished in {} seconds", now.elapsed().as_secs());
         println!("Saving frame");
         let now = Instant::now();
-        debugging::save_to_file(frame_out, width, height, format!("images/out{}.ppm", num_saved).as_str());
+        debugging::save_to_file(frame_out, width, height, format!("images/out{:03}.ppm", num_saved).as_str());
         println!("Saved frame {} in {} seconds", num_saved, now.elapsed().as_secs());
         num_saved += 1;
     }
+
+    taskbarapp.quit();
+    taskbar_thread.join();
 }

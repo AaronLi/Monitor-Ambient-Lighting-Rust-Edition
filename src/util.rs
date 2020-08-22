@@ -7,19 +7,17 @@ pub struct FramerateLimiter{
     previous_tick: time::Instant,
 }
 
-trait FramerateLimiterMethods{
-    fn new() -> FramerateLimiter;
-    fn tick(&mut self, framerate: f32);
-}
-
-impl FramerateLimiterMethods for FramerateLimiter{
-    fn new() -> FramerateLimiter{
+impl FramerateLimiter{
+    pub fn new() -> FramerateLimiter{
         FramerateLimiter{
             previous_tick: time::Instant::now()
         }
     }
 
-    fn tick(&mut self, framerate: f32) {
+    pub fn tick(&mut self, framerate: f32) {
+        /**
+        framerate: given in fps, the approximate rate that a loop will repeat at if tick is called consistently within it
+        */
         let elapsed_time = self.previous_tick.elapsed();
 
         let seconds_per_frame = 1.0/framerate;

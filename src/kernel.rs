@@ -1,15 +1,3 @@
-
-pub trait KernelApply{
-    fn kernel_pass_result(&self, image_data: &Vec<u8>, image_width: usize, image_height: usize, kernel_apply_x: usize, kernel_apply_y: usize) -> [u8; 3];
-}
-
-pub struct Kernel{
-    pub weights: Vec<f32>,
-    pub width: usize,
-    pub height: usize,
-    pub coefficient: f32,
-}
-
 fn get_pixel_address(x: usize, y: usize, image_width: usize, image_height: usize) -> Option<usize>{
     if y >= image_height || x >= image_width {
         return None
@@ -21,8 +9,15 @@ fn get_pixel_address(x: usize, y: usize, image_width: usize, image_height: usize
     }
 }
 
-impl KernelApply for Kernel{
-    fn kernel_pass_result(&self, image_data: &Vec<u8>, image_width: usize, image_height: usize, kernel_apply_x: usize, kernel_apply_y: usize) -> [u8; 3]{
+pub struct Kernel{
+    pub weights: Vec<f32>,
+    pub width: usize,
+    pub height: usize,
+    pub coefficient: f32,
+}
+
+impl Kernel{
+    pub fn kernel_pass_result(&self, image_data: &Vec<u8>, image_width: usize, image_height: usize, kernel_apply_x: usize, kernel_apply_y: usize) -> [u8; 3]{
         let kernel_left_start = self.width / 2;
         let kernel_top_start = self.height / 2;
 

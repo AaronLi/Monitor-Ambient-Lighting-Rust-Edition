@@ -1,5 +1,4 @@
 use crate::kernel;
-use crate::kernel::KernelApply;
 
 #[cfg(test)]
 mod tests{
