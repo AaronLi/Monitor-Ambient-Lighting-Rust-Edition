@@ -16,7 +16,7 @@ impl FramerateLimiter{
 
     pub fn tick(&mut self, framerate: f32) {
         /**
-        framerate: given in fps, the approximate rate that a loop will repeat at if tick is called consistently within it
+            framerate: given in fps, the approximate rate that a loop will repeat at if tick is called consistently within it
         */
         let elapsed_time = self.previous_tick.elapsed();
 

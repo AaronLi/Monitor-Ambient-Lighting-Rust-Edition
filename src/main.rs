@@ -1,5 +1,6 @@
+mod monitor_config;
 mod worker;
-mod util;
+mod framerate;
 mod app;
 mod debugging;
 mod test_kernel;
@@ -10,15 +11,16 @@ extern crate serialport;
 extern crate systray;
 
 use std::io::ErrorKind::WouldBlock;
-use std::thread;
+use std::{thread, sync};
 use std::time::{Duration, Instant};
 use crate::debugging::select_serial_port;
 
 fn main() {
     let mut taskbarapp = systray::Application::new().unwrap();
+    app::setup_application(&mut taskbarapp);
 
-    let taskbar_thread = app::setup_application(&mut taskbarapp);
-
+    let config = monitor_config::MonitorConfiguration::load_from_file("assets/example_configuration.json").unwrap();
+    println!("{}", config);
     //select_serial_port(None);
 
     let display = scrap::Display::primary().expect("Couldn't find primary display");
@@ -83,7 +85,4 @@ fn main() {
         println!("Saved frame {} in {} seconds", num_saved, now.elapsed().as_secs());
         num_saved += 1;
     }
-
-    taskbarapp.quit();
-    taskbar_thread.join();
 }

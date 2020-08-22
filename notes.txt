@@ -1,6 +1,3 @@
-Main tells app.rs to setup
-app.rs creates a thread that creates a taskbar icon which communicates back via message passing
-app.rs creates an instance of worker with default settings
-user selects settings from taskbar that is being run by the taskbar thread
-taskbar thread sends message to app.rs
-app.rs message receives message and orchestrates the worker thread
+The core functionality will work off of json config files
+configuring serial ports, baudrate, and refreshrate can be done with a side program that opens and maybe restarts the core
+if there are changes made
