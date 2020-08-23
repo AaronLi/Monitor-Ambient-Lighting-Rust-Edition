@@ -1,3 +1,4 @@
+mod program_config;
 mod monitor_config;
 mod worker;
 mod framerate;
@@ -19,8 +20,10 @@ fn main() {
     let mut taskbarapp = systray::Application::new().unwrap();
     app::setup_application(&mut taskbarapp);
 
-    let config = monitor_config::MonitorConfiguration::load_from_file("assets/example_configuration.json").unwrap();
-    println!("{}", config);
+    let m_config = monitor_config::MonitorConfiguration::load_from_file("assets/example_monitor_configuration.json");
+    let p_config = program_config::ProgramConfiguration::load_from_file("assets/example_program_configuration.json");
+    println!("{}", m_config);
+    println!("{}", p_config);
     //select_serial_port(None);
 
     let display = scrap::Display::primary().expect("Couldn't find primary display");

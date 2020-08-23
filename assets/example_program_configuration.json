@@ -1,0 +1,5 @@
+{
+    "serial_port": "COM4",
+    "refresh_rate": 20.0,
+    "baud_rate": 115200
+}
