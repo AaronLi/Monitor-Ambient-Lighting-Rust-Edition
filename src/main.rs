@@ -17,11 +17,28 @@ use std::time::{Duration, Instant};
 use crate::debugging::select_serial_port;
 
 fn main() {
+    let gaussian_kernel = kernel::Kernel{
+        weights: vec![
+            /*1.0, 2.0, 1.0,
+            2.0, 4.0, 2.0,
+            1.0, 2.0, 1.0*/
+            1.0, 4.0, 7.0, 4.0, 1.0,
+            4.0, 16.0, 26.0, 16.0, 4.0,
+            7.0, 26.0, 41.0, 26.0, 7.0,
+            4.0, 16.0, 26.0, 16.0, 4.0,
+            1.0, 4.0, 7.0, 4.0, 1.0
+        ],
+        width: 5,
+        height: 5,
+        coefficient: 1.0/273.0
+    };
+
     let mut taskbarapp = systray::Application::new().unwrap();
     app::setup_application(&mut taskbarapp);
 
     let m_config = monitor_config::MonitorConfiguration::load_from_file("assets/example_monitor_configuration.json");
     let p_config = program_config::ProgramConfiguration::load_from_file("assets/example_program_configuration.json");
+    let pixel_locations = m_config.get_pixel_locations(&gaussian_kernel).unwrap();
     println!("{}", m_config);
     println!("{}", p_config);
     //select_serial_port(None);
@@ -55,22 +72,6 @@ fn main() {
     }
 
     let mut num_saved = 0;
-
-    let gaussian_kernel = kernel::Kernel{
-        weights: vec![
-            /*1.0, 2.0, 1.0,
-            2.0, 4.0, 2.0,
-            1.0, 2.0, 1.0*/
-            1.0, 4.0, 7.0, 4.0, 1.0,
-            4.0, 16.0, 26.0, 16.0, 4.0,
-            7.0, 26.0, 41.0, 26.0, 7.0,
-            4.0, 16.0, 26.0, 16.0, 4.0,
-            1.0, 4.0, 7.0, 4.0, 1.0
-        ],
-        width: 5,
-        height: 5,
-        coefficient: 1.0/273.0
-    };
     for f in frames {
         let mut frame_out = Vec::new();
         println!("Applying kernel");
@@ -80,6 +81,13 @@ fn main() {
                 let result = gaussian_kernel.kernel_pass_result(&f, width, height, x, y);
                 frame_out.extend_from_slice(&result);
             }
+        }
+        for point in pixel_locations.clone(){
+            let address = (point[0] + width * point[1]) * 3;
+
+            frame_out[address] = 255;
+            frame_out[address+1] = 0;
+            frame_out[address+2] = 0;
         }
         println!("Finished in {} seconds", now.elapsed().as_secs());
         println!("Saving frame");

@@ -7,11 +7,17 @@ pub struct FramerateLimiter{
     previous_tick: time::Instant,
 }
 
+impl Default for FramerateLimiter{
+    fn default() -> Self {
+        FramerateLimiter{
+            previous_tick: Instant::now()
+        }
+    }
+}
+
 impl FramerateLimiter{
     pub fn new() -> FramerateLimiter{
-        FramerateLimiter{
-            previous_tick: time::Instant::now()
-        }
+        FramerateLimiter::default()
     }
 
     pub fn tick(&mut self, framerate: f32) {

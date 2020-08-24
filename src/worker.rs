@@ -5,25 +5,17 @@ extern crate scrap;
 use std::{thread, time, sync};
 use crate::{debugging, framerate};
 use crate::kernel;
+use crate::kernel::Kernel;
 
 struct Worker {
     open_serial_port: sync::Mutex<Box<dyn serialport::SerialPort>>,
     display_capturer: sync::Mutex<scrap::Capturer>,
     kernel: sync::Mutex<kernel::Kernel>,
-    refreshrate: sync::Mutex<framerate::FramerateLimiter>
+    refreshrate: sync::Mutex<framerate::FramerateLimiter>,
+    pixel_locations: Vec<[u32; 2]>
 }
 
-
 impl Worker {
-    pub fn new(serial_port: Box<dyn serialport::SerialPort>, blur_kernel: kernel::Kernel, capturer: scrap::Capturer, framerate_limiter: framerate::FramerateLimiter) -> Worker{
-        Worker{
-            open_serial_port: sync::Mutex::new(serial_port),
-            display_capturer: sync::Mutex::new(capturer),
-            kernel: sync::Mutex::new(blur_kernel),
-            refreshrate: sync::Mutex::new(framerate_limiter),
-
-        }
-    }
 
     pub fn read_and_output(&mut self) {
         // locks on the display capturer and serial port should be acquireable with very little

@@ -16,6 +16,17 @@ pub struct Kernel{
     pub coefficient: f32,
 }
 
+impl Default for Kernel{
+    fn default() -> Self {
+        Kernel{
+            weights: vec![1.0],
+            width: 1,
+            height: 1,
+            coefficient: 1.0
+        }
+    }
+}
+
 impl Kernel{
     pub fn kernel_pass_result(&self, image_data: &Vec<u8>, image_width: usize, image_height: usize, kernel_apply_x: usize, kernel_apply_y: usize) -> [u8; 3]{
         let kernel_left_start = self.width / 2;

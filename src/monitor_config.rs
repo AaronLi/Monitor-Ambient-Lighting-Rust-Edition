@@ -7,6 +7,7 @@ use std::error::Error;
 use std::fmt;
 use std::fmt::Formatter;
 use std::ops::Add;
+use crate::kernel;
 
 struct LEDCount {
     top: usize,
@@ -37,6 +38,99 @@ pub struct MonitorConfiguration {
 
 impl MonitorConfiguration {
 
+    pub fn get_pixel_locations(&self, blend_kernel: &kernel::Kernel) -> Option<Vec<[usize; 2]>>{
+        let mut output = Vec::new();
+        let displays = scrap::Display::all().ok()?;
+
+        for (monitor, monitor_pixel) in self.monitors.iter().zip(displays.iter()) {
+            let bezel_length = (monitor.bezel_thickness.left + monitor.bezel_thickness.right).hypot(monitor.bezel_thickness.top + monitor.bezel_thickness.bottom);
+            let physical_diagonal = bezel_length + monitor.diagonal_size;
+            let kernel_diagonal = (blend_kernel.width as f32).hypot(blend_kernel.height as f32);
+            // subtract the kernel diagonal so that the kernel can start fully within the image, this prevents only half of the kernel being used and producing poorer results
+            // alternate solution: have coefficient be ~2 for kernel to compensate for half the kernel being black
+            let pixel_diagonal = (monitor_pixel.width() as f32).hypot(monitor_pixel.height() as f32) - kernel_diagonal;
+
+            let inch_pixel_ratio = physical_diagonal / pixel_diagonal;
+
+            let pixels_per_led = (monitor.leds_per_inch * (1.0 / inch_pixel_ratio));
+
+            let _monitor_width = pixels_per_led * (monitor_pixel.width() as f32);
+            let _monitor_height = pixels_per_led * (monitor_pixel.height() as f32);
+
+            // indexes 0, 2, 4, 8
+            let mut side_iterator = monitor.led_order.chars().step_by(2);
+            // indexes 1, 3, 5, 7
+            let mut direction_iterator = monitor.led_order.chars().skip(1).step_by(2);
+            for (side, direction) in side_iterator.zip(direction_iterator){
+                let mut pixel_pos = MonitorConfiguration::get_starting_xy(side, direction, monitor_pixel, blend_kernel);
+
+                let num_leds = match side {
+                    'l' => monitor.led_distribution.left,
+                    'r' => monitor.led_distribution.right,
+                    't' => monitor.led_distribution.top,
+                    'b' => monitor.led_distribution.bottom,
+                    _ => panic!("Invalid monitor configuration detected when trying to determine led count")
+                };
+
+                let step_amount = match direction {
+                    'l' => [-pixels_per_led, 0.0],
+                    'r' => [pixels_per_led, 0.0],
+                    'u' => [0.0, -pixels_per_led],
+                    'd' => [0.0, pixels_per_led],
+                    _ => panic!("Invalid monitor configuration detected when trying to determine step amount")
+                };
+
+                for led_number in 0..num_leds{
+                    output.push([(pixel_pos[0] + (step_amount[0] * led_number as f32)) as usize, (pixel_pos[1] + (step_amount[1] * led_number as f32)) as usize]);
+                };
+            }
+        };
+        Some(output)
+    }
+
+    fn get_starting_xy(side: char, direction: char, screen: &scrap::Display, kernel_info : &kernel::Kernel) -> [f32; 2]{
+        let mut output: [f32; 2] = [0.0, 0.0];
+        let (half_kernel_width, half_kernel_height) = ((kernel_info.width/2) as f32, (kernel_info.height/2) as f32);
+        let (screen_width, screen_height) = (screen.width() as f32, screen.height() as f32);
+        println!("{} {}", side, direction);
+        match side {
+            'l' => {
+                output[0] = half_kernel_width;
+            },
+            'r' => {
+                output[0] = screen_width - half_kernel_width;
+            },
+            't' => {
+                output[1] = half_kernel_height;
+            },
+            'b' => {
+                output[1] = screen_height - half_kernel_height;
+            },
+            _ =>{
+                panic!("Invalid side given {}", side);
+            }
+        }
+
+        match direction {
+            'l' => {
+                output[0] = screen_width - half_kernel_width;
+            },
+            'r' => {
+                output[0] = half_kernel_width;
+            },
+            'u' => {
+                output[1] = screen_height - half_kernel_height;
+            },
+            'd' => {
+                output[1] = half_kernel_height;
+            },
+            _ =>{
+                panic!("Invalid direction given {}", direction);
+            }
+        }
+        output
+    }
+
     pub fn load_from_file(path: &str) -> MonitorConfiguration {
         MonitorConfiguration::try_load(path).unwrap_or_default()
     }
@@ -54,7 +148,7 @@ impl MonitorConfiguration {
 
             let monitor_instance = Monitor {
                 monitor_number: monitor_data["monitor"].as_usize()?,
-                led_order: String::from(monitor_data["led_order"].as_str()?),
+                led_order: String::from(monitor_data["led_order"].as_str()?).to_lowercase(),
                 diagonal_size: monitor_data["diagonal_size"].as_f32()?,
                 led_distribution: LEDCount {
                     top: monitor_data["led_count"]["top"].as_usize()?,

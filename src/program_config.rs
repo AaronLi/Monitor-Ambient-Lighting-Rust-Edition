@@ -41,7 +41,7 @@ impl ProgramConfiguration {
         let parsed_json = json::parse(file_contents.as_str()).ok()?;
 
         let out_config = ProgramConfiguration {
-            serial_port: String::from(parsed_json["serial_port"].as_str()?),
+            serial_port: String::from(parsed_json["serial_port"].as_str()?).to_lowercase(),
             refresh_rate: parsed_json["refresh_rate"].as_f32()?,
             baudrate: parsed_json["baud_rate"].as_usize()?
         };
