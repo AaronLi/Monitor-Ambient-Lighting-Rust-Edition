@@ -17,30 +17,20 @@ use std::time::{Duration, Instant};
 use crate::debugging::select_serial_port;
 
 fn main() {
-    let gaussian_kernel = kernel::Kernel{
-        weights: vec![
-            /*1.0, 2.0, 1.0,
-            2.0, 4.0, 2.0,
-            1.0, 2.0, 1.0*/
-            1.0, 4.0, 7.0, 4.0, 1.0,
-            4.0, 16.0, 26.0, 16.0, 4.0,
-            7.0, 26.0, 41.0, 26.0, 7.0,
-            4.0, 16.0, 26.0, 16.0, 4.0,
-            1.0, 4.0, 7.0, 4.0, 1.0
-        ],
-        width: 5,
-        height: 5,
-        coefficient: 1.0/273.0
-    };
+    let conv_kernel = kernel::Kernel::averaging(12, 12);
 
     let mut taskbarapp = systray::Application::new().unwrap();
     app::setup_application(&mut taskbarapp);
 
     let m_config = monitor_config::MonitorConfiguration::load_from_file("assets/example_monitor_configuration.json");
     let p_config = program_config::ProgramConfiguration::load_from_file("assets/example_program_configuration.json");
-    let pixel_locations = m_config.get_pixel_locations(&gaussian_kernel).unwrap();
+    let pixel_locations = m_config.get_pixel_locations(&conv_kernel).unwrap();
     println!("{}", m_config);
     println!("{}", p_config);
+    println!(
+        "Blur filter has an area of {} pixels, with {} locations there will be about {} * x operations",
+        conv_kernel.weights.len(), pixel_locations.len(), pixel_locations.len() * conv_kernel.weights.len()
+    );
     //select_serial_port(None);
 
     let display = scrap::Display::primary().expect("Couldn't find primary display");
@@ -78,7 +68,7 @@ fn main() {
         let now = Instant::now();
         for y in 0..height {
             for x in 0..width {
-                let result = gaussian_kernel.kernel_pass_result(&f, width, height, x, y);
+                let result = conv_kernel.kernel_pass_result(&f, width, height, x, y);
                 frame_out.extend_from_slice(&result);
             }
         }

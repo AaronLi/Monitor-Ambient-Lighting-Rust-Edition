@@ -28,7 +28,29 @@ impl Default for Kernel{
 }
 
 impl Kernel{
+    pub fn gaussian(width: usize, height: usize, std_dev: f32) -> Kernel {
+        Kernel{
+            weights: vec![],
+            width,
+            height,
+            coefficient: 0.0 // 1.0 / (2.0 * f32::PI() * std_dev.pow(2.0))
+        };
+
+        unimplemented!()
+    }
+
+    pub fn averaging(width: usize, height: usize) -> Kernel{
+        Kernel{
+            weights: vec![1.0; width*height],
+            width,
+            height,
+            coefficient: 1.0 / (width as f32 * height as f32)
+        }
+    }
+
+
     pub fn kernel_pass_result(&self, image_data: &Vec<u8>, image_width: usize, image_height: usize, kernel_apply_x: usize, kernel_apply_y: usize) -> [u8; 3]{
+        // todo: switch this back to using arrays so that captured images don't have to be put into vectors first
         let kernel_left_start = self.width / 2;
         let kernel_top_start = self.height / 2;
 
