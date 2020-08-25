@@ -43,7 +43,7 @@ impl ProgramConfiguration {
 
         match serialport::open_with_settings(self.serial_port.as_str(), &settings){
             Ok(port) => Some(port),
-            Err(e) => None
+            Err(_e) => None
         }
     }
 

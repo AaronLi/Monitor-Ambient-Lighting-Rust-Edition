@@ -11,7 +11,9 @@ extern crate scrap;
 extern crate serialport;
 extern crate systray;
 
-use std::{path, fs};
+use std::{path, fs, thread};
+use std::time::Duration;
+use std::sync::mpsc;
 
 fn main() {
     let assets_directory = path::Path::new("assets");
@@ -34,13 +36,24 @@ fn main() {
         conv_kernel.weights.len(), pixel_locations.len(), pixel_locations.len() * conv_kernel.weights.len()
     );
     //select_serial_port(None);
-    let mut test_worker = match worker::Worker::new(p_config, m_config, conv_kernel, 0){
-        Ok(worker_inst) => worker_inst,
-        Err(error) => panic!(error)
-    };
-    println!("Running");
-    loop {
-        test_worker.read_and_output();
-        test_worker.tick();
-    }
+    let (tx, rx) = mpsc::channel();
+    let worker_thread = thread::spawn(move ||{
+        let mut test_worker = Box::new(match worker::Worker::new(p_config, m_config, conv_kernel, 0){
+            Ok(worker_inst) => worker_inst,
+            Err(error) => panic!(error)
+        });
+        println!("Running");
+        loop{
+            let _received_message = match rx.recv() {
+                Ok(message) => message,
+                Err(_error) => break
+            };
+            //println!("{}", _received_message);
+            test_worker.read_and_output();
+            test_worker.tick();
+        }
+    });
+
+    taskbarapp.wait_for_message().expect("Taskbar icon does not want to wait for messages");
+
 }
