@@ -26,10 +26,7 @@ pub struct Worker {
 impl Worker {
     pub fn new(program_config: ProgramConfiguration, monitor_config: MonitorConfiguration, b_kernel: Kernel, display_index: usize) -> Result<Worker, Error> {
         let display_config_info = monitor_config.monitors.get(display_index).unwrap();
-        //let display_info = ;
-        println!("{:?}", scrap::Display::all().unwrap().len());
         let display_capturer = scrap::Capturer::new(scrap::Display::all().unwrap().remove(display_config_info.monitor_number-1));
-        println!("{:?}", scrap::Display::all().unwrap().len());
         let pixel_locations = monitor_config.get_pixel_locations(&b_kernel).unwrap();
         Ok(Worker{
             open_serial_port: Mutex::new(program_config.get_open_serial_port().expect("Unable to open serial port")),
@@ -49,13 +46,14 @@ impl Worker {
         // the serial output mode and display capturer from the taskbar
         let mut display_capturer = self.display_capturer.lock().unwrap();
         let blur_kernel = self.blur_kernel.lock().unwrap();
+        let refresh_rate_controller = self.refreshrate.lock().unwrap();
 
         let captured_image: Vec<u8> = match display_capturer.frame() {
             Ok(frame) => frame.to_vec(),
             Err(error) => {
                 if error.kind() == std::io::ErrorKind::WouldBlock {
                     // Wait until function is called again to try and capture another screenshot
-                    thread::sleep(time::Duration::new(1, 0) / 60);
+                    thread::sleep(time::Duration::new(1, 0) / refresh_rate_controller.tick_rate as u32);
                 }
                 return;
             }

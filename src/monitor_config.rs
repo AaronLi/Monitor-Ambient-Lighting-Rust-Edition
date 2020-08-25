@@ -90,7 +90,6 @@ impl MonitorConfiguration {
         let mut output: [f32; 2] = [0.0, 0.0];
         let (half_kernel_width, half_kernel_height) = (kernel_info.width as f32/2.0, kernel_info.height as f32/2.0);
         let (screen_width, screen_height) = (screen.width() as f32, screen.height() as f32);
-        println!("{} {}", side, direction);
         match side {
             'l' => {
                 output[0] = half_kernel_width;

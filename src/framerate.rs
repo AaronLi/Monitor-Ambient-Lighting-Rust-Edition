@@ -3,7 +3,7 @@ use std::time::Instant;
 
 pub struct FramerateLimiter{
     previous_tick: time::Instant,
-    tick_rate: f32,
+    pub tick_rate: f32,
 }
 
 impl Default for FramerateLimiter{
