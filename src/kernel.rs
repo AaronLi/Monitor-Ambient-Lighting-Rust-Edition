@@ -49,8 +49,7 @@ impl Kernel{
     }
 
 
-    pub fn kernel_pass_result(&self, image_data: &Vec<u8>, image_width: usize, image_height: usize, kernel_apply_x: usize, kernel_apply_y: usize) -> [u8; 3]{
-        // todo: switch this back to using arrays so that captured images don't have to be put into vectors first
+    pub fn kernel_pass_result(&self, image_data: &[u8], image_width: usize, image_height: usize, kernel_apply_x: usize, kernel_apply_y: usize) -> [u8; 3]{
         let kernel_left_start = self.width / 2;
         let kernel_top_start = self.height / 2;
 

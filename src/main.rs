@@ -11,11 +11,6 @@ extern crate scrap;
 extern crate serialport;
 extern crate systray;
 
-use std::io::ErrorKind::WouldBlock;
-use std::{thread, sync};
-use std::time::{Duration, Instant};
-use crate::debugging::select_serial_port;
-
 fn main() {
     let conv_kernel = kernel::Kernel::averaging(12, 12);
 
@@ -32,58 +27,12 @@ fn main() {
         conv_kernel.weights.len(), pixel_locations.len(), pixel_locations.len() * conv_kernel.weights.len()
     );
     //select_serial_port(None);
-
-    let display = scrap::Display::primary().expect("Couldn't find primary display");
-    let mut capturer = scrap::Capturer::new(display).expect("Couldn't begin display capture");
-
-    let (width, height) = (capturer.width(), capturer.height());
-
-    let mut frames = Vec::new();
-    let to_capture = 8;
+    let mut test_worker = match worker::Worker::new(p_config, m_config, conv_kernel, 0){
+        Ok(worker_inst) => worker_inst,
+        Err(error) => panic!(error)
+    };
     loop {
-        match capturer.frame() {
-            Ok(frame) =>{
-                frames.push(frame.to_vec());
-                println!("Captured {} frames",frames.len());
-            },
-
-            Err(error) => {
-                if error.kind() == WouldBlock {
-                    println!("Waiting");
-                    thread::sleep(Duration::new(1, 0) / 144);
-                    continue;
-                }else{
-                    panic!("Unknown error while capturing!");
-                }
-            }
-        };
-
-        if frames.len() >= to_capture {break};
-    }
-
-    let mut num_saved = 0;
-    for f in frames {
-        let mut frame_out = Vec::new();
-        println!("Applying kernel");
-        let now = Instant::now();
-        for y in 0..height {
-            for x in 0..width {
-                let result = conv_kernel.kernel_pass_result(&f, width, height, x, y);
-                frame_out.extend_from_slice(&result);
-            }
-        }
-        for point in pixel_locations.clone(){
-            let address = (point[0] + width * point[1]) * 3;
-
-            frame_out[address] = 255;
-            frame_out[address+1] = 0;
-            frame_out[address+2] = 0;
-        }
-        println!("Finished in {} seconds", now.elapsed().as_secs());
-        println!("Saving frame");
-        let now = Instant::now();
-        debugging::save_to_file(frame_out, width, height, format!("images/out{:03}.ppm", num_saved).as_str());
-        println!("Saved frame {} in {} seconds", num_saved, now.elapsed().as_secs());
-        num_saved += 1;
+        test_worker.read_and_output();
+        test_worker.tick();
     }
 }

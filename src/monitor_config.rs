@@ -3,37 +3,35 @@ extern crate json;
 use std::path::Path;
 use std::io::Read;
 use std::fs::File;
-use std::error::Error;
 use std::fmt;
 use std::fmt::Formatter;
-use std::ops::Add;
 use crate::kernel;
 
-struct LEDCount {
+pub struct LEDCount {
     top: usize,
     left: usize,
     right: usize,
     bottom: usize,
 }
 
-struct Bezel {
+pub struct Bezel {
     top: f32,
     left: f32,
     bottom: f32,
     right: f32,
 }
 
-struct Monitor {
-    monitor_number: usize,
-    led_order: String,
-    diagonal_size: f32,
-    led_distribution: LEDCount,
-    leds_per_inch: f32,
-    bezel_thickness: Bezel,
+pub struct Monitor {
+    pub monitor_number: usize,
+    pub led_order: String,
+    pub diagonal_size: f32,
+    pub led_distribution: LEDCount,
+    pub leds_per_inch: f32,
+    pub bezel_thickness: Bezel,
 }
 
 pub struct MonitorConfiguration {
-    monitors: Vec<Monitor>,
+    pub monitors: Vec<Monitor>,
 }
 
 impl MonitorConfiguration {
@@ -52,17 +50,17 @@ impl MonitorConfiguration {
 
             let inch_pixel_ratio = physical_diagonal / pixel_diagonal;
 
-            let pixels_per_led = (monitor.leds_per_inch * (1.0 / inch_pixel_ratio));
+            let pixels_per_led = monitor.leds_per_inch * (1.0 / inch_pixel_ratio);
 
-            let _monitor_width = pixels_per_led * (monitor_pixel.width() as f32);
-            let _monitor_height = pixels_per_led * (monitor_pixel.height() as f32);
+            let _monitor_width = pixels_per_led * monitor_pixel.width() as f32;
+            let _monitor_height = pixels_per_led * monitor_pixel.height() as f32;
 
             // indexes 0, 2, 4, 8
-            let mut side_iterator = monitor.led_order.chars().step_by(2);
+            let side_iterator = monitor.led_order.chars().step_by(2);
             // indexes 1, 3, 5, 7
-            let mut direction_iterator = monitor.led_order.chars().skip(1).step_by(2);
+            let direction_iterator = monitor.led_order.chars().skip(1).step_by(2);
             for (side, direction) in side_iterator.zip(direction_iterator){
-                let mut pixel_pos = MonitorConfiguration::get_starting_xy(side, direction, monitor_pixel, blend_kernel);
+                let pixel_pos = MonitorConfiguration::get_starting_xy(side, direction, monitor_pixel, blend_kernel);
 
                 let num_leds = match side {
                     'l' => monitor.led_distribution.left,
@@ -81,7 +79,7 @@ impl MonitorConfiguration {
                 };
 
                 for led_number in 0..num_leds{
-                    output.push([(pixel_pos[0] + (step_amount[0] * led_number as f32)) as usize, (pixel_pos[1] + (step_amount[1] * led_number as f32)) as usize]);
+                    output.push([(pixel_pos[0] + (step_amount[0] * led_number as f32)).round() as usize, (pixel_pos[1] + (step_amount[1] * led_number as f32)).round() as usize]);
                 };
             }
         };
@@ -90,7 +88,7 @@ impl MonitorConfiguration {
 
     fn get_starting_xy(side: char, direction: char, screen: &scrap::Display, kernel_info : &kernel::Kernel) -> [f32; 2]{
         let mut output: [f32; 2] = [0.0, 0.0];
-        let (half_kernel_width, half_kernel_height) = ((kernel_info.width/2) as f32, (kernel_info.height/2) as f32);
+        let (half_kernel_width, half_kernel_height) = (kernel_info.width as f32/2.0, kernel_info.height as f32/2.0);
         let (screen_width, screen_height) = (screen.width() as f32, screen.height() as f32);
         println!("{} {}", side, direction);
         match side {

@@ -1,8 +1,5 @@
 extern crate systray;
 
-use std::sync::Condvar;
-use std::io::{stdout, Write};
-use systray::{Error};
 use orbtk::prelude::*;
 use std::thread;
 

@@ -4,7 +4,7 @@ use std::fs::File;
 use std::io::{stdin, Write, stdout};
 use serialport::{SerialPortInfo, SerialPort, SerialPortSettings};
 
-pub fn save_to_file(image_data: Vec<u8>, image_width: usize, image_height: usize, filename: &str){
+pub fn _save_to_file(image_data: Vec<u8>, image_width: usize, image_height: usize, filename: &str){
     let path = Path::new(filename);
     path.extension().expect("Invalid file extension!");
 
@@ -35,7 +35,7 @@ pub fn save_to_file(image_data: Vec<u8>, image_width: usize, image_height: usize
     out_file.write(out_bytes.as_slice()).unwrap();
 }
 
-pub fn select_serial_port(settings: Option<SerialPortSettings>) -> Box<dyn SerialPort> {
+pub fn _select_serial_port(settings: Option<SerialPortSettings>) -> Box<dyn SerialPort> {
     loop {
         let mut portnames = Vec::new();
         let available_ports: Vec<SerialPortInfo>  = match serialport::available_ports(){
@@ -62,7 +62,7 @@ pub fn select_serial_port(settings: Option<SerialPortSettings>) -> Box<dyn Seria
 
         let serial_port_selection = match selection.parse::<usize>(){
             Ok(selection) => {
-                if (0 < selection && selection < portnames.len()) {
+                if 0 < selection && selection < portnames.len() {
                     println!("{}", selection - 1);
                     portnames.get(selection - 1).unwrap()
                 }else{

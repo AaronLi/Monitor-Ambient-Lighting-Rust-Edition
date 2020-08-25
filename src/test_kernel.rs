@@ -1,9 +1,7 @@
-use crate::kernel;
-
 #[cfg(test)]
 mod tests{
 
-    use super::*;
+    use crate::kernel;
 
     #[test]
     fn kernel_test(){
