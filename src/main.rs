@@ -6,16 +6,21 @@ mod app;
 mod debugging;
 mod test_kernel;
 mod kernel;
+mod settings_configurer;
+mod baudrate;
 
 extern crate scrap;
 extern crate serialport;
 extern crate systray;
 
-use std::{path, fs, thread};
+use std::{path, fs, thread, sync};
 use std::time::Duration;
-use std::sync::mpsc;
+use std::sync::{mpsc, Mutex, Arc};
+use std::ops::{Deref, DerefMut};
+use iced::{Settings, Sandbox};
 
 fn main() {
+    settings_configurer::SettingsConfig::run(settings_configurer::SettingsConfig::default_window_settings(Some("assets/icon.ico")));
     let assets_directory = path::Path::new("assets");
     if !assets_directory.exists(){
         fs::create_dir_all(assets_directory);
@@ -36,24 +41,24 @@ fn main() {
         conv_kernel.weights.len(), pixel_locations.len(), pixel_locations.len() * conv_kernel.weights.len()
     );
     //select_serial_port(None);
-    let (tx, rx) = mpsc::channel();
+    let keep_running_worker = Arc::new(Mutex::new(true));
+    let should_continue_running = keep_running_worker.clone();
     let worker_thread = thread::spawn(move ||{
         let mut test_worker = Box::new(match worker::Worker::new(p_config, m_config, conv_kernel, 0){
             Ok(worker_inst) => worker_inst,
-            Err(error) => panic!(error)
+            Err(error) => {eprintln!("Could not intialize worker"); return}
         });
         println!("Running");
         loop{
-            let _received_message = match rx.recv() {
-                Ok(message) => message,
-                Err(_error) => break
+            match should_continue_running.lock(){
+                Ok(keep_running) => {if !*keep_running.deref() {break}},
+                Err(_e) => break,
             };
-            //println!("{}", _received_message);
             test_worker.read_and_output();
             test_worker.tick();
         }
     });
 
     taskbarapp.wait_for_message().expect("Taskbar icon does not want to wait for messages");
-
+    *keep_running_worker.lock().unwrap() = false;
 }

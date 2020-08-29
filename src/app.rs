@@ -1,6 +1,5 @@
 extern crate systray;
 
-use orbtk::prelude::*;
 use std::thread;
 
 pub fn setup_application(app: &mut systray::Application){
