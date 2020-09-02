@@ -2,7 +2,7 @@
 extern crate serialport;
 extern crate scrap;
 
-use std::{thread, time, sync};
+use std::{thread, time, io};
 use crate::framerate;
 use crate::kernel::Kernel;
 use std::io::Write;
@@ -10,23 +10,29 @@ use std::ops::Deref;
 use crate::program_config::ProgramConfiguration;
 use crate::monitor_config::MonitorConfiguration;
 
+#[derive(Debug)]
 pub enum Error{
     OpenSerialError,
     OpenCapturerError,
 }
 
+pub enum ControlMessages{
+    StopWorker,
+    UpdateConfiguration
+}
+
 pub struct Worker {
-    open_serial_port: Box<dyn serialport::SerialPort>,
-    display_capturer: scrap::Capturer,
+    pub open_serial_port: Box<dyn serialport::SerialPort>,
+    pub display_capturer: scrap::Capturer,
     blur_kernel: Kernel,
     refreshrate: framerate::FramerateLimiter,
     pixel_locations: Vec<[usize; 2]>
 }
 
+
 impl Worker {
     pub fn new(program_config: ProgramConfiguration, monitor_config: MonitorConfiguration, b_kernel: Kernel, display_index: usize) -> Result<Worker, Error> {
-        let display_config_info = monitor_config.monitors.get(display_index).unwrap();
-        let display_capturer = scrap::Capturer::new(scrap::Display::all().unwrap().remove(display_config_info.monitor_number-1));
+        let display_capturer = Worker::get_display_capturer(&monitor_config, display_index);
         let pixel_locations = monitor_config.get_pixel_locations(&b_kernel).unwrap();
 
         let open_serial_port = match program_config.get_open_serial_port(){
@@ -36,7 +42,7 @@ impl Worker {
 
         let unwrapped_display_capturer = match display_capturer{
             Ok(capturer) => capturer,
-            Err(_err) => return Err(Error::OpenCapturerError)
+            Err(_err) => {eprintln!("{}", _err); return Err(Error::OpenCapturerError)}
         };
 
         Ok(Worker{
@@ -49,6 +55,11 @@ impl Worker {
     }
     pub fn tick(&mut self){
         self.refreshrate.tick();
+    }
+
+    fn get_display_capturer(monitor_config: &MonitorConfiguration, display_index: usize) -> io::Result<scrap::Capturer>{
+        let display_config_info = monitor_config.monitors.get(display_index).unwrap();
+        scrap::Capturer::new(scrap::Display::all().unwrap().remove(display_config_info.monitor_number-1))
     }
 
     pub fn read_and_output(&mut self) {
@@ -73,21 +84,37 @@ impl Worker {
         self.open_serial_port.write_all(output_colours.as_slice()).expect("Could not write to serial port");
     }
 
-    /*pub fn set_serial_port(&mut self, new_serial_port: Box<dyn serialport::SerialPort>){
-        let mut serial_port = self.open_serial_port.lock().unwrap();
+    pub fn update_settings(&mut self, program_config: Option<ProgramConfiguration>, monitor_config: Option<MonitorConfiguration>, conv_kernel: Option<Kernel>){
+        if program_config.is_some() {
+            let program_config_info = program_config.unwrap();
+            match self.open_serial_port.name() {
+                Some(name) => {
+                    if name.to_uppercase() != program_config_info.serial_port {
+                        // new serial port
+                        match program_config_info.get_open_serial_port() {
+                            Some(port) => self.open_serial_port = port,
+                            None => { println!("Unable to open serial port") }
+                        }
+                    } else {
+                        self.open_serial_port.set_all(&program_config_info.get_serial_port_settings()).unwrap();
+                    }
+                }
+                None => { eprintln!("Failed to retrieve current port name") }
+            }
+        }
+        if monitor_config.is_some() {
+            match Worker::get_display_capturer(&monitor_config.unwrap(), 0) {
+                Ok(cap) => {
+                    self.display_capturer = cap;
+                },
+                Err(e) => match e {
+                    _ => {
+                        println!("{}", e);
+                    }
+                },
+            }
+        }
 
-        *serial_port = new_serial_port;
+        self.blur_kernel =  if conv_kernel.is_some() {conv_kernel.unwrap()} else{self.blur_kernel};
     }
-
-    pub fn set_display_capturer(&mut self, new_capturer: scrap::Capturer){
-        let mut capturer = self.display_capturer.lock().unwrap();
-
-        *capturer = new_capturer;
-    }
-
-    pub fn set_blurring_kernel(&mut self, new_kernel: Kernel){
-        let mut blur_kernel = self.blur_kernel.lock().unwrap();
-
-        *blur_kernel = new_kernel;
-    }*/
 }

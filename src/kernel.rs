@@ -1,3 +1,5 @@
+pub const MAX_KERNEL_SIZE: usize = 32*32;
+
 fn get_pixel_address(x: usize, y: usize, image_width: usize, image_height: usize) -> Option<usize>{
     if y >= image_height || x >= image_width {
         return None
@@ -9,8 +11,9 @@ fn get_pixel_address(x: usize, y: usize, image_width: usize, image_height: usize
     }
 }
 
+#[derive(Copy, Clone)]
 pub struct Kernel{
-    pub weights: Vec<f32>,
+    pub weights: [f32; MAX_KERNEL_SIZE],
     pub width: usize,
     pub height: usize,
     pub coefficient: f32,
@@ -19,7 +22,7 @@ pub struct Kernel{
 impl Default for Kernel{
     fn default() -> Self {
         Kernel{
-            weights: vec![1.0],
+            weights: [1.0; MAX_KERNEL_SIZE],
             width: 1,
             height: 1,
             coefficient: 1.0
@@ -28,7 +31,7 @@ impl Default for Kernel{
 }
 
 impl Kernel{
-    pub fn gaussian(width: usize, height: usize, std_dev: f32) -> Kernel {
+    /*pub fn gaussian(width: usize, height: usize, std_dev: f32) -> Kernel {
         Kernel{
             weights: vec![],
             width,
@@ -37,11 +40,11 @@ impl Kernel{
         };
 
         unimplemented!()
-    }
+    }*/
 
     pub fn averaging(width: usize, height: usize) -> Kernel{
         Kernel{
-            weights: vec![1.0; width*height],
+            weights: [1.0; MAX_KERNEL_SIZE],
             width,
             height,
             coefficient: 1.0 / (width as f32 * height as f32)

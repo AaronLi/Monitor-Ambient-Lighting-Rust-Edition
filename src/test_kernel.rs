@@ -5,12 +5,8 @@ mod tests{
 
     #[test]
     fn kernel_test(){
-        let k = kernel::Kernel{
-            weights: vec![
-                1.0, 1.0, 1.0,
-                1.0, 1.0, 1.0,
-                1.0, 1.0, 1.0
-            ],
+        let _k = kernel::Kernel{
+            weights: [1.0; kernel::MAX_KERNEL_SIZE],
             width: 3,
             height: 3,
             coefficient: 1.0
