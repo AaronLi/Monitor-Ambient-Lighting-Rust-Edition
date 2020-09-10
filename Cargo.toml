@@ -17,3 +17,4 @@ iced = {path = "lib/iced-master"}
 image = "0.23.8"
 json = "0.12.4"
 winit = "0.22.2"
+clap = "2.33.3"

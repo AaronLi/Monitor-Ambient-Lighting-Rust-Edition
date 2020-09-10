@@ -3,12 +3,11 @@ extern crate serialport;
 extern crate scrap;
 
 use std::{thread, time, io};
-use crate::framerate;
-use crate::kernel::Kernel;
 use std::io::Write;
 use std::ops::Deref;
-use crate::program_config::ProgramConfiguration;
-use crate::monitor_config::MonitorConfiguration;
+use crate::core::kernel::Kernel;
+use crate::core::{framerate, program_config};
+use crate::core::monitor_config::MonitorConfiguration;
 
 #[derive(Debug)]
 pub enum Error{
@@ -31,11 +30,11 @@ pub struct Worker {
 
 
 impl Worker {
-    pub fn new(program_config: ProgramConfiguration, monitor_config: MonitorConfiguration, b_kernel: Kernel, display_index: usize) -> Result<Worker, Error> {
+    pub fn new(p_config: program_config::ProgramConfiguration, monitor_config: MonitorConfiguration, b_kernel: Kernel, display_index: usize) -> Result<Worker, Error> {
         let display_capturer = Worker::get_display_capturer(&monitor_config, display_index);
         let pixel_locations = monitor_config.get_pixel_locations(&b_kernel).unwrap();
 
-        let open_serial_port = match program_config.get_open_serial_port(){
+        let open_serial_port = match p_config.get_open_serial_port(){
             Some(port) => port,
             None => return Err(Error::OpenSerialError)
         };
@@ -49,7 +48,7 @@ impl Worker {
             open_serial_port: open_serial_port,
             display_capturer: unwrapped_display_capturer,
             blur_kernel: b_kernel,
-            refreshrate: program_config.get_refreshrate_controller(),
+            refreshrate: p_config.get_refreshrate_controller(),
             pixel_locations: pixel_locations
         })
     }
@@ -84,9 +83,9 @@ impl Worker {
         self.open_serial_port.write_all(output_colours.as_slice()).expect("Could not write to serial port");
     }
 
-    pub fn update_settings(&mut self, program_config: Option<ProgramConfiguration>, monitor_config: Option<MonitorConfiguration>, conv_kernel: Option<Kernel>){
-        if program_config.is_some() {
-            let program_config_info = program_config.unwrap();
+    pub fn update_settings(&mut self, p_config: Option<program_config::ProgramConfiguration>, monitor_config: Option<MonitorConfiguration>, conv_kernel: Option<Kernel>){
+        if p_config.is_some() {
+            let program_config_info = p_config.unwrap();
             match self.open_serial_port.name() {
                 Some(name) => {
                     if name.to_uppercase() != program_config_info.serial_port {

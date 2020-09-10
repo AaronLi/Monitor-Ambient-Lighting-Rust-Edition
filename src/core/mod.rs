@@ -1,0 +1,11 @@
+pub mod framerate;
+pub mod kernel;
+pub mod worker;
+pub mod baudrate;
+pub mod settings_configurer;
+pub mod app;
+mod monitor_configurer;
+mod monitor_config;
+mod monitor_configurer_widget;
+mod side;
+mod program_config;

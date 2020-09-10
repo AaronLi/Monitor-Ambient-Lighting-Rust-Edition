@@ -2,10 +2,11 @@ extern crate systray;
 extern crate winit;
 
 use std::{thread, env, sync};
-use crate::{kernel, program_config, monitor_config, worker};
 use std::process::Command;
 use std::sync::{Mutex, Arc};
-use crate::worker::{Worker, Error, ControlMessages};
+use crate::core::{worker, kernel, program_config, monitor_config};
+use crate::core::worker::{Error, ControlMessages};
+use std::sync::mpsc::SendError;
 
 #[derive(Clone)]
 pub struct WorkerControl {
@@ -23,7 +24,7 @@ impl WorkerControl{
             worker_communicator: tx,
         };
         thread::spawn(move || {
-            let mut test_worker = match Worker::new(p_config, m_config, conv_kernel, 0) {
+            let mut test_worker = match worker::Worker::new(p_config, m_config, conv_kernel, 0) {
                 Ok(worker_inst) => worker_inst,
                 Err(error) => {
                     eprintln!("Could not intialize worker");
@@ -62,7 +63,6 @@ impl WorkerControl{
 
 pub fn setup_application(app: &mut systray::Application, worker_controller: Arc<Mutex<WorkerControl>>){
     // The app won't do any events unless you tell it to wait for messages
-    // TODO: run monitor scanning and output segments in separate thread
     // app.quit() quits the taskbar process and it will have to be reconstructed
     let cwc = worker_controller.clone();
     app.set_icon_from_file("assets/icon.ico").expect("Unable to set icon for menu");
@@ -76,7 +76,13 @@ pub fn setup_application(app: &mut systray::Application, worker_controller: Arc<
     let cwc2 = worker_controller.clone();
 
     app.add_menu_item("Quit", move |application| {
-        cwc2.lock().unwrap().worker_communicator.send(worker::ControlMessages::StopWorker).unwrap();
+        let mut worker_control = cwc2.lock().unwrap();
+        match worker_control.worker_communicator.send(worker::ControlMessages::StopWorker){
+            Ok(_) => {},
+            Err(_) => {
+                // Pipes are probably already closed
+            },
+        }
         application.quit();
         Ok::<_, systray::Error>(())
     }).expect("Unable to add quit button to menu");

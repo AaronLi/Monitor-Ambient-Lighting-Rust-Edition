@@ -6,15 +6,13 @@ use std::{path, fs};
 use std::io::{Read, Write};
 use json::object;
 use serialport::{SerialPort, DataBits, StopBits, Parity, FlowControl};
-use crate::framerate;
-use crate::framerate::FramerateLimiter;
-use crate::baudrate::Baudrate;
+use crate::core::{baudrate, framerate};
 
 #[derive(Clone, PartialEq)]
 pub struct ProgramConfiguration {
     pub serial_port: String,
     pub refresh_rate: f32,
-    pub baudrate: Baudrate,
+    pub baudrate: baudrate::Baudrate,
 }
 
 impl Default for ProgramConfiguration {
@@ -22,7 +20,7 @@ impl Default for ProgramConfiguration {
         ProgramConfiguration {
             serial_port: String::from("COM0"),
             refresh_rate: 20.0,
-            baudrate: Baudrate::default()
+            baudrate: baudrate::Baudrate::default()
         }
     }
 }
@@ -54,7 +52,7 @@ impl ProgramConfiguration {
         }
     }
 
-    pub fn get_refreshrate_controller(&self) -> FramerateLimiter {
+    pub fn get_refreshrate_controller(&self) -> framerate::FramerateLimiter {
         framerate::FramerateLimiter::new(self.refresh_rate)
     }
 
@@ -73,7 +71,7 @@ impl ProgramConfiguration {
         let out_config = ProgramConfiguration {
             serial_port: String::from(parsed_json["serial_port"].as_str()?),
             refresh_rate: parsed_json["refresh_rate"].as_f32()?,
-            baudrate: Baudrate::from(parsed_json["baud_rate"].as_u32()?)
+            baudrate: baudrate::Baudrate::from(parsed_json["baud_rate"].as_u32()?)
         };
         Some(out_config)
     }

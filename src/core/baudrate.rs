@@ -1,5 +1,4 @@
-use core::fmt::Display;
-use std::fmt::Formatter;
+use std::fmt::{Display, Formatter};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u32)]
@@ -21,13 +20,13 @@ pub enum Baudrate {
     B2000000 = 2000000,
 }
 
-impl Default for Baudrate{
+impl Default for Baudrate {
     fn default() -> Self {
         Baudrate::B115200
     }
 }
 
-impl From<u32> for Baudrate{
+impl From<u32> for Baudrate {
     fn from(int: u32) -> Self {
         match int {
             300 => Baudrate::B300,
@@ -50,7 +49,7 @@ impl From<u32> for Baudrate{
     }
 }
 
-impl Display for Baudrate{
+impl Display for Baudrate {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -60,7 +59,7 @@ impl Display for Baudrate{
     }
 }
 
-impl Baudrate{
+impl Baudrate {
     pub(crate) const ALL: [Baudrate; 15] = [
         Baudrate::B300,
         Baudrate::B1200,

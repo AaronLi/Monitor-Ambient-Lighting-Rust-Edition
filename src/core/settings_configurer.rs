@@ -3,17 +3,15 @@ extern crate iced;
 use self::iced::{Container, Sandbox, Length, Row, Align, Text, TextInput, text_input, Column, Element, pick_list, PickList, Button, button};
 use iced::settings::Settings;
 use self::iced::window::icon::Icon;
-use crate::baudrate::Baudrate;
 use std::path::Path;
-use crate::program_config;
 use image::GenericImageView;
-use crate::program_config::ProgramConfiguration;
 use std::process::exit;
+use crate::core::{program_config, baudrate};
 
 #[derive(Clone)]
 pub struct SettingsConfigurer {
     port_options_state: pick_list::State<String>,
-    baudrate_options_state: pick_list::State<Baudrate>,
+    baudrate_options_state: pick_list::State<baudrate::Baudrate>,
     refreshrate_state: text_input::State,
     save_path_state: text_input::State,
     save_button_state: button::State,
@@ -28,7 +26,7 @@ pub struct SettingsConfigurer {
 #[derive(Clone, PartialEq)]
 struct FieldValues{
     selected_port: String,
-    selected_baudrate: Baudrate,
+    selected_baudrate: baudrate::Baudrate,
     desired_refreshrate: String,
     save_file_path: String,
     config_state: ConfigState,
@@ -37,7 +35,7 @@ struct FieldValues{
 #[derive(Debug, Clone)]
 pub enum Message {
     PortSelected(String),
-    BaudrateSelected(Baudrate),
+    BaudrateSelected(baudrate::Baudrate),
     RefreshrateSelected(String),
     FilePathChanged(String),
     SaveFile,
@@ -92,7 +90,7 @@ impl Sandbox for SettingsConfigurer {
 
         let baudrate_picker = PickList::new(
             &mut self.baudrate_options_state,
-            &Baudrate::ALL[..],
+            &baudrate::Baudrate::ALL[..],
             Some(render_values.selected_baudrate),
             Message::BaudrateSelected,
         )
@@ -216,7 +214,6 @@ impl Sandbox for SettingsConfigurer {
             }
 
             Message::ResetSettings => {
-                println!("Reset");
                 // the 0th index is the last setting configuration that can be reset to
                 self.current_values_index = 0;
                 // remove the extra values
@@ -238,7 +235,6 @@ impl Sandbox for SettingsConfigurer {
         self.current_values_index+=1;
         self.previous_states.truncate(self.current_values_index);
         self.previous_states.push(new_state);
-        println!("{} {}", self.previous_states.len(), self.current_values_index);
     }
 }
 
@@ -274,7 +270,7 @@ impl SettingsConfigurer {
         ports_out
     }
 
-    pub fn get_current_configuration(&self) -> ProgramConfiguration {
+    pub fn get_current_configuration(&self) -> program_config::ProgramConfiguration {
         let current_values = self.get_values();
         program_config::ProgramConfiguration {
             serial_port: current_values.selected_port,
