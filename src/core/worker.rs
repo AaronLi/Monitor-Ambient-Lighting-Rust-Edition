@@ -36,7 +36,10 @@ impl Worker {
 
         let open_serial_port = match p_config.get_open_serial_port(){
             Some(port) => port,
-            None => return Err(Error::OpenSerialError)
+            None => {
+                eprintln!("Failed to open serial port!");
+                return Err(Error::OpenSerialError)
+            }
         };
 
         let unwrapped_display_capturer = match display_capturer{
@@ -79,7 +82,6 @@ impl Worker {
         for point in self.pixel_locations.deref() {
             output_colours.extend_from_slice(&self.blur_kernel.kernel_pass_result(&captured_image, self.display_capturer.width(), self.display_capturer.height(), point[0], point[1]));
         };
-
         self.open_serial_port.write_all(output_colours.as_slice()).expect("Could not write to serial port");
     }
 

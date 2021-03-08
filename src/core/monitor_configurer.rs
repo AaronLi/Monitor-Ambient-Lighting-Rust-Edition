@@ -1,6 +1,6 @@
 extern crate iced;
 
-use self::iced::{Sandbox, Element, Checkbox};
+use self::iced::{Sandbox, Element};
 
 
 struct MonitorConfigurer {
@@ -31,7 +31,7 @@ impl Sandbox for MonitorConfigurer {
         "Monitor LED Setup Wizard".into()
     }
 
-    fn update(&mut self, message: Self::Message) {
+    fn update(&mut self, _: Self::Message) {
         unimplemented!()
     }
 

@@ -3,7 +3,7 @@ extern crate json;
 use std::path::Path;
 use std::io::Read;
 use std::fs::File;
-use std::{fmt, io};
+use std::fmt;
 use std::fmt::{Formatter, Display};
 use crate::core::kernel;
 use crate::core::side::{SideDirection, Side};

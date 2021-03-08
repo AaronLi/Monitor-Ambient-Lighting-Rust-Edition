@@ -11,7 +11,7 @@ pub enum Side{
 
 impl From<char> for Side{
     fn from(c: char) -> Self {
-        match c{
+        match c.to_ascii_lowercase(){
             't' => Side::TOP,
             'b' => Side::BOTTOM,
             'l' => Side::LEFT,

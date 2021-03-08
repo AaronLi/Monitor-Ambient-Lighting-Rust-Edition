@@ -1,5 +1,5 @@
 {
     "refresh_rate": 20,
     "baud_rate": 115200,
-    "serial_port": "COM4"
+    "serial_port": "COM5"
 }

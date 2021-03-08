@@ -2,7 +2,7 @@
     "monitor_configuration": [
         {
             "monitor": 1,
-            "led_order": "LUTRRDBL",
+            "led_order": "LTTRRBBL",
             "diagonal_size": 24.1,
             "led_count": {
                 "right": 10,

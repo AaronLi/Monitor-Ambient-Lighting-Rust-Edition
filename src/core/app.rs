@@ -6,7 +6,7 @@ use std::process::Command;
 use std::sync::{Mutex, Arc};
 use crate::core::{worker, kernel, program_config, monitor_config};
 use crate::core::worker::{Error, ControlMessages};
-use std::sync::mpsc::SendError;
+use std::sync::mpsc::TryRecvError;
 
 #[derive(Clone)]
 pub struct WorkerControl {
@@ -37,7 +37,7 @@ impl WorkerControl{
             };
             println!("Running");
             loop {
-                match rx.recv() {
+                match rx.try_recv() {
                     Ok(message) => {
                         match message{
                             worker::ControlMessages::StopWorker => {println!("stopping");break},
@@ -51,7 +51,12 @@ impl WorkerControl{
                             }
                         }
                     },
-                    Err(_e) => break,
+                    Err(e) => {
+                        match e{
+                            TryRecvError::Empty => {}
+                            TryRecvError::Disconnected => {break}
+                        }
+                    },
                 };
                 test_worker.read_and_output();
                 test_worker.tick();
@@ -76,7 +81,7 @@ pub fn setup_application(app: &mut systray::Application, worker_controller: Arc<
     let cwc2 = worker_controller.clone();
 
     app.add_menu_item("Quit", move |application| {
-        let mut worker_control = cwc2.lock().unwrap();
+        let worker_control = cwc2.lock().unwrap();
         match worker_control.worker_communicator.send(worker::ControlMessages::StopWorker){
             Ok(_) => {},
             Err(_) => {

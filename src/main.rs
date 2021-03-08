@@ -6,7 +6,7 @@ extern crate serialport;
 extern crate systray;
 extern crate clap;
 
-use std::{path, fs, env};
+use std::{path, fs};
 use std::sync::{Mutex, Arc};
 use iced::{Sandbox};
 use crate::core::{settings_configurer, app};
@@ -19,9 +19,12 @@ fn main() {
         .subcommand(clap::SubCommand::with_name("configure_program")
         ).get_matches();
 
-    if let Some(matches) = matches.subcommand_matches("configure_program"){
-        settings_configurer::SettingsConfigurer::run(settings_configurer::SettingsConfigurer::default_window_settings(Some("assets/icon.ico")))
-    };
+    match matches.subcommand_matches("configure_program") {
+        None => {}
+        Some(_matches) => {
+            settings_configurer::SettingsConfigurer::run(settings_configurer::SettingsConfigurer::default_window_settings(Some("assets/icon.ico"))).expect("Unable to launch settings configurer");
+        }
+    }
 
     let assets_directory = path::Path::new("assets");
     if !assets_directory.exists(){
