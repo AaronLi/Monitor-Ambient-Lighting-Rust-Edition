@@ -1,12 +1,13 @@
 extern crate iced;
 
-use self::iced::{Container, Sandbox, Length, Row, Align, Text, TextInput, text_input, Column, Element, pick_list, PickList, Button, button};
+use self::iced::{Container, Sandbox, Length, Row, Alignment, Text, TextInput, text_input, Column, Element, pick_list, PickList, Button, button};
 use iced::settings::Settings;
 use self::iced::window::icon::Icon;
 use std::path::Path;
-use image::GenericImageView;
+use image::{ImageError};
 use std::process::exit;
-use crate::core::{program_config, baudrate};
+use iced::alignment::Horizontal;
+use crate::{baudrate, program_config};
 
 #[derive(Clone)]
 pub struct SettingsConfigurer {
@@ -130,7 +131,7 @@ impl Sandbox for SettingsConfigurer {
 
 
         let port_baud_row = Row::new()
-            .align_items(Align::Start)
+            .align_items(Alignment::Start)
             .spacing(10)
             .push(Text::new("Communicate on"))
             .push(port_picker)
@@ -138,14 +139,14 @@ impl Sandbox for SettingsConfigurer {
             .push(baudrate_picker)
             .push(Text::new("baud."));
         let framerate_row = Row::new()
-            .align_items(Align::Start)
+            .align_items(Alignment::Start)
             .spacing(10)
             .push(Text::new("Refresh LEDs at"))
             .push(framerate_selection)
             .push(Text::new("hz."));
 
         let save_file_row = Row::new()
-            .align_items(Align::Start)
+            .align_items(Alignment::Start)
             .spacing(10)
             .push(Text::new("Save to"))
             .push(save_file_line);
@@ -155,7 +156,7 @@ impl Sandbox for SettingsConfigurer {
             .push(reset_button)
             .push(ok_button)
             .spacing(15)
-            .align_items(Align::End);
+            .align_items(Alignment::End);
 
         let selection_column = Column::new()
             .push(port_baud_row)
@@ -167,7 +168,7 @@ impl Sandbox for SettingsConfigurer {
         Container::new(selection_column)
             .center_x()
             .center_y()
-            .align_x(Align::Center)
+            .align_x(Horizontal::Center)
             .width(Length::Fill)
             .height(Length::Fill)
             .into()
@@ -282,7 +283,7 @@ impl SettingsConfigurer {
     pub fn default_window_settings(path_in_opt: Option<&str>) -> Settings<()> {
         let mut out = Settings::default();
         if path_in_opt.is_some(){
-            SettingsConfigurer::try_set_icon(&mut out, path_in_opt.unwrap());
+            SettingsConfigurer::try_set_icon(&mut out, path_in_opt.unwrap()).unwrap();
         }
         out.window.size = (570, 230);
         out.window.resizable = false;
@@ -290,22 +291,15 @@ impl SettingsConfigurer {
         out
     }
 
-    fn try_set_icon(settings_in: &mut Settings<()>, icon_path: &str) {
+    fn try_set_icon(settings_in: &mut Settings<()>, icon_path: &str) -> Result<(), ImageError> {
         /*
         Attempts to load an image and set it as the icon
         Does nothing if an error occurs along the line of setting the image
         */
         let path = Path::new(icon_path);
-        match image::open(path){
-            Ok(image) => {
-                match image.as_rgba8() {
-                    Some(data) => {
-                        settings_in.window.icon = Icon::from_rgba(data.to_vec(), image.width(), image.height()).ok();
-                    },
-                    _ => {}
-                }
-            },
-            _ => {}
-        };
+        let image = image::open(path)?.to_rgb8();
+        settings_in.window.icon = Icon::from_rgba(image.to_vec(), image.width(), image.height()).ok();
+
+        Ok(())
     }
 }

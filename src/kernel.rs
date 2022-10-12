@@ -63,7 +63,7 @@ impl Kernel{
                 // Check subtraction won't wraparound for x and y
                 let x_in_bounds = kernel_left_start <= (kernel_apply_x + k_x);
                 let y_in_bounds = kernel_top_start <= (kernel_apply_y + k_y);
-                if x_in_bounds & y_in_bounds {
+                if x_in_bounds && y_in_bounds {
 
                     let p_address = get_pixel_address(kernel_apply_x + k_x - kernel_left_start, kernel_apply_y + k_y - kernel_top_start, image_width, image_height);
                     match p_address {

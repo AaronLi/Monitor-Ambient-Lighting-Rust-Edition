@@ -5,9 +5,10 @@ extern crate scrap;
 use std::{thread, time, io};
 use std::io::Write;
 use std::ops::Deref;
-use crate::core::kernel::Kernel;
-use crate::core::{framerate, program_config};
-use crate::core::monitor_config::MonitorConfiguration;
+use crate::framerate::FramerateLimiter;
+use crate::kernel::Kernel;
+use crate::monitor_config::MonitorConfiguration;
+use crate::program_config::ProgramConfiguration;
 
 #[derive(Debug)]
 pub enum Error{
@@ -15,7 +16,7 @@ pub enum Error{
     OpenCapturerError,
 }
 
-pub enum ControlMessages{
+pub enum ControlMessage {
     StopWorker,
     UpdateConfiguration
 }
@@ -24,14 +25,14 @@ pub struct Worker {
     pub open_serial_port: Box<dyn serialport::SerialPort>,
     pub display_capturer: scrap::Capturer,
     blur_kernel: Kernel,
-    refreshrate: framerate::FramerateLimiter,
+    refreshrate: FramerateLimiter,
     pixel_locations: Vec<[usize; 2]>,
     captured_image: Vec<u8>
 }
 
 
 impl Worker {
-    pub fn new(p_config: program_config::ProgramConfiguration, monitor_config: MonitorConfiguration, b_kernel: Kernel, display_index: usize) -> Result<Worker, Error> {
+    pub fn new(p_config: ProgramConfiguration, monitor_config: MonitorConfiguration, b_kernel: Kernel, display_index: usize) -> Result<Worker, Error> {
         let display_capturer = Worker::get_display_capturer(&monitor_config, display_index);
         let pixel_locations = monitor_config.get_pixel_locations(&b_kernel).unwrap();
 
@@ -90,7 +91,7 @@ impl Worker {
         self.open_serial_port.write_all(output_colours.as_slice()).expect("Could not write to serial port");
     }
 
-    pub fn update_settings(&mut self, p_config: Option<program_config::ProgramConfiguration>, monitor_config: Option<MonitorConfiguration>, conv_kernel: Option<Kernel>){
+    pub fn update_settings(&mut self, p_config: Option<ProgramConfiguration>, monitor_config: Option<MonitorConfiguration>, conv_kernel: Option<Kernel>){
         if p_config.is_some() {
             let program_config_info = p_config.unwrap();
             match self.open_serial_port.name() {

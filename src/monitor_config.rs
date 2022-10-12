@@ -5,8 +5,8 @@ use std::io::Read;
 use std::fs::File;
 use std::fmt;
 use std::fmt::{Formatter, Display};
-use crate::core::kernel;
-use crate::core::side::{SideDirection, Side};
+use crate::kernel::Kernel;
+use crate::side::{Side, SideDirection};
 
 pub struct LEDCount {
     top: usize,
@@ -69,7 +69,7 @@ pub struct MonitorConfiguration {
 
 impl MonitorConfiguration {
 
-    pub fn get_pixel_locations(&self, blend_kernel: &kernel::Kernel) -> Option<Vec<[usize; 2]>>{
+    pub fn get_pixel_locations(&self, blend_kernel: &Kernel) -> Option<Vec<[usize; 2]>>{
         let mut output = Vec::new();
         let displays = scrap::Display::all().ok()?;
 
@@ -116,7 +116,7 @@ impl MonitorConfiguration {
         Some(output)
     }
 
-    fn get_starting_xy(side: Side, direction: Side, screen: &scrap::Display, kernel_info : &kernel::Kernel) -> [f32; 2]{
+    fn get_starting_xy(side: Side, direction: Side, screen: &scrap::Display, kernel_info : &Kernel) -> [f32; 2]{
         let mut output: [f32; 2] = [0.0, 0.0];
         let (half_kernel_width, half_kernel_height) = (kernel_info.width as f32/2.0, kernel_info.height as f32/2.0);
         let (screen_width, screen_height) = (screen.width() as f32, screen.height() as f32);

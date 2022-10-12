@@ -6,13 +6,14 @@ use std::{path, fs};
 use std::io::{Read, Write};
 use json::object;
 use serialport::{SerialPort, DataBits, StopBits, Parity, FlowControl};
-use crate::core::{baudrate, framerate};
+use crate::baudrate::Baudrate;
+use crate::framerate::FramerateLimiter;
 
 #[derive(Clone, PartialEq)]
 pub struct ProgramConfiguration {
     pub serial_port: String,
     pub refresh_rate: f32,
-    pub baudrate: baudrate::Baudrate,
+    pub baudrate: Baudrate,
 }
 
 impl Default for ProgramConfiguration {
@@ -20,7 +21,7 @@ impl Default for ProgramConfiguration {
         ProgramConfiguration {
             serial_port: String::from("COM0"),
             refresh_rate: 20.0,
-            baudrate: baudrate::Baudrate::default()
+            baudrate: Baudrate::default()
         }
     }
 }
@@ -35,10 +36,7 @@ impl ProgramConfiguration {
     pub fn get_open_serial_port(&self) -> Option<Box<dyn SerialPort>> {
         let settings = self.get_serial_port_settings();
 
-        match serialport::open_with_settings(self.serial_port.as_str(), &settings){
-            Ok(port) => Some(port),
-            Err(_e) => {eprintln!("Could not open serial port for given reason: {}", _e); None}
-        }
+        serialport::open_with_settings(self.serial_port.as_str(), &settings).ok()
     }
 
     pub fn get_serial_port_settings(&self) -> serialport::SerialPortSettings {
@@ -52,8 +50,8 @@ impl ProgramConfiguration {
         }
     }
 
-    pub fn get_refreshrate_controller(&self) -> framerate::FramerateLimiter {
-        framerate::FramerateLimiter::new(self.refresh_rate)
+    pub fn get_refreshrate_controller(&self) -> FramerateLimiter {
+        FramerateLimiter::new(self.refresh_rate)
     }
 
     pub fn load_from_file(path_in: &str)-> ProgramConfiguration {
@@ -71,7 +69,7 @@ impl ProgramConfiguration {
         let out_config = ProgramConfiguration {
             serial_port: String::from(parsed_json["serial_port"].as_str()?),
             refresh_rate: parsed_json["refresh_rate"].as_f32()?,
-            baudrate: baudrate::Baudrate::from(parsed_json["baud_rate"].as_u32()?)
+            baudrate: Baudrate::from(parsed_json["baud_rate"].as_u32()?)
         };
         Some(out_config)
     }

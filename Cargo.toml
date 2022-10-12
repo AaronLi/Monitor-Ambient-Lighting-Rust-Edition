@@ -2,7 +2,7 @@
 name = "monitor_ambient_lighting_rust_edition"
 version = "0.1.0"
 authors = ["AaronLi <dumfing@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -11,8 +11,9 @@ scrap = "0.5.0"
 systray = "0.4.0"
 serialport = "3.3.0"
 
-iced = "0.2.0"
-image = "0.23.8"
+iced = "0.4.2"
+image = "0.24.4"
 json = "0.12.4"
-winit = "0.22.2"
-clap = "2.33.3"
+winit = "0.27.3"
+clap = {version="4.0.10", features=["derive"]}
+directories = "4.0.1"
