@@ -5,6 +5,7 @@ extern crate scrap;
 use std::{thread, time, io};
 use std::io::Write;
 use std::ops::Deref;
+use serialport::SerialPort;
 use crate::framerate::FramerateLimiter;
 use crate::kernel::Kernel;
 use crate::monitor_config::MonitorConfiguration;
@@ -22,7 +23,6 @@ pub enum ControlMessage {
 }
 
 pub struct Worker {
-    pub open_serial_port: Box<dyn serialport::SerialPort>,
     pub display_capturer: scrap::Capturer,
     blur_kernel: Kernel,
     refreshrate: FramerateLimiter,
@@ -36,21 +36,12 @@ impl Worker {
         let display_capturer = Worker::get_display_capturer(&monitor_config, display_index);
         let pixel_locations = monitor_config.get_pixel_locations(&b_kernel).unwrap();
 
-        let open_serial_port = match p_config.get_open_serial_port(){
-            Some(port) => port,
-            None => {
-                eprintln!("Failed to open serial port!");
-                return Err(Error::OpenSerialError)
-            }
-        };
-
         let unwrapped_display_capturer = match display_capturer{
             Ok(capturer) => capturer,
             Err(_err) => {eprintln!("{}", _err); return Err(Error::OpenCapturerError)}
         };
 
         Ok(Worker{
-            open_serial_port: open_serial_port,
             display_capturer: unwrapped_display_capturer,
             blur_kernel: b_kernel,
             refreshrate: p_config.get_refreshrate_controller(),
@@ -67,7 +58,7 @@ impl Worker {
         scrap::Capturer::new(scrap::Display::all().unwrap().remove(display_config_info.monitor_number-1))
     }
 
-    pub fn read_and_output(&mut self) {
+    pub fn read_and_output(&mut self, serial_port: &mut dyn SerialPort) {
         // locks on the display capturer and serial port should be acquireable with very little
         // blocking since the only time they're acquired elsewhere is for the purpose of modifying
         // the serial output mode and display capturer from the taskbar
@@ -88,7 +79,7 @@ impl Worker {
         for point in self.pixel_locations.deref() {
             output_colours.extend_from_slice(&self.blur_kernel.kernel_pass_result(&self.captured_image, self.display_capturer.width(), self.display_capturer.height(), point[0], point[1]));
         };
-        self.open_serial_port.write_all(output_colours.as_slice()).expect("Could not write to serial port");
+        serial_port.write_all(output_colours.as_slice()).expect("Could not write to serial port");
     }
 
     pub fn update_settings(&mut self, p_config: Option<ProgramConfiguration>, monitor_config: Option<MonitorConfiguration>, conv_kernel: Option<Kernel>){

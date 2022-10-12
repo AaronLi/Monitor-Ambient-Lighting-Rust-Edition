@@ -4,6 +4,7 @@ extern crate serialport;
 use std::fmt::{Display, Formatter, Result};
 use std::{path, fs};
 use std::io::{Read, Write};
+use std::path::Path;
 use json::object;
 use serialport::{SerialPort, DataBits, StopBits, Parity, FlowControl};
 use crate::baudrate::Baudrate;
@@ -74,9 +75,8 @@ impl ProgramConfiguration {
         Some(out_config)
     }
 
-    pub fn save_to_file(&self, path_in: &str){
-        let file_path = path::Path::new(path_in);
-        let mut open_file = fs::File::create(file_path).unwrap();
+    pub fn save_to_file(&self, path_in: &Path){
+        let mut open_file = fs::File::create(path_in).unwrap();
 
         let json_out = object!{
             "refresh_rate": self.refresh_rate,

@@ -251,7 +251,7 @@ impl SettingsConfigurer {
         let current_values = self.get_values();
         if !current_values.save_file_path.is_empty() {
             let current_config_state = self.get_current_configuration();
-            current_config_state.save_to_file(current_values.save_file_path.as_str());
+            current_config_state.save_to_file(Path::new(&current_values.save_file_path));
             true
         }
         else {
